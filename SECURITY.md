@@ -1,30 +1,23 @@
 # Security Policy
 
-## Scope
+This repository is a public portfolio project for the Palm Oil Weighbridge Management Software (Sistem Timbangan PKS).
 
-This repository is a public portfolio snapshot of the Palm Oil Weighbridge Management Software (Sistem Timbangan PKS).
+## Protecting Sensitive Information
 
-## Sensitive Information
+Do not commit or publish:
 
-Do not commit any of the following:
-
-- SQL usernames or passwords
+- Passwords or database credentials
 - API keys, access tokens, or private keys
-- Production database backups (`.bak`, `.mdf`, `.ldf`)
-- Real customer, supplier, transporter, driver, or transaction records when they are confidential
-- Local `db_config.txt` files
-- Internal infrastructure secrets or credentials
+- Production database backups
+- Confidential customer, supplier, driver, or transaction data
+- Local configuration files containing secrets
+- Internal infrastructure credentials
 
-The repository `.gitignore` excludes common local database/configuration files, but contributors must still review changes before committing.
+## Reporting Security Issues
 
-## Local Database Credentials
+Please report suspected security issues privately through the project author's GitHub profile rather than publishing sensitive details in a public issue.
 
-When SQL Authentication is used, the application stores the credential payload using Windows DPAPI with `DataProtectionScope.CurrentUser`. The protected local configuration file is not part of the repository.
+## Portfolio Notice
 
-## Password Storage
+This repository is provided for portfolio and evaluation purposes. Production deployment should undergo appropriate environment-specific security review and configuration.
 
-New passwords are stored using PBKDF2-HMAC-SHA256 with per-password random salts. Legacy unsalted SHA-256 hashes are accepted only for migration and are upgraded after a successful login.
-
-## Reporting a Vulnerability
-
-For this portfolio repository, please do not publish sensitive exploit details together with credentials or private data. Contact the project author through the GitHub profile associated with this repository before disclosure where practical.
