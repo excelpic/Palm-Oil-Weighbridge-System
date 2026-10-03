@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema id="DataSet1" targetNamespace="http://tempuri.org/DataSet1.xsd" xmlns:mstns="http://tempuri.org/DataSet1.xsd" xmlns="http://tempuri.org/DataSet1.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:msprop="urn:schemas-microsoft-com:xml-msprop" attributeFormDefault="qualified" elementFormDefault="qualified">
+  <xs:annotation>
+    <xs:appinfo source="urn:schemas-microsoft-com:xml-msdatasource">
+      <DataSource DefaultConnectionIndex="0" FunctionsComponentName="QueriesTableAdapter" Modifier="AutoLayout, AnsiClass, Class, Public" SchemaSerializationMode="IncludeSchema" xmlns="urn:schemas-microsoft-com:xml-msdatasource">
+        <Connections />
+        <Tables />
+        <Sources />
+      </DataSource>
+    </xs:appinfo>
+  </xs:annotation>
+  <xs:element name="DataSet1" msdata:IsDataSet="true" msdata:UseCurrentLocale="true" msprop:Generator_UserDSName="DataSet1" msprop:EnableTableAdapterManager="true" msprop:Generator_DataSetName="DataSet1">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="dtRekapTimbangan" msprop:Generator_RowEvHandlerName="dtRekapTimbanganRowChangeEventHandler" msprop:Generator_RowDeletedName="dtRekapTimbanganRowDeleted" msprop:Generator_RowDeletingName="dtRekapTimbanganRowDeleting" msprop:Generator_RowEvArgName="dtRekapTimbanganRowChangeEvent" msprop:Generator_TablePropName="dtRekapTimbangan" msprop:Generator_RowChangedName="dtRekapTimbanganRowChanged" msprop:Generator_UserTableName="dtRekapTimbangan" msprop:Generator_RowChangingName="dtRekapTimbanganRowChanging" msprop:Generator_RowClassName="dtRekapTimbanganRow" msprop:Generator_TableClassName="dtRekapTimbanganDataTable" msprop:Generator_TableVarName="tabledtRekapTimbangan">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="NoTicket" msprop:Generator_ColumnPropNameInTable="NoTicketColumn" msprop:Generator_ColumnPropNameInRow="NoTicket" msprop:Generator_UserColumnName="NoTicket" msprop:Generator_ColumnVarNameInTable="columnNoTicket" type="xs:string" minOccurs="0" />
+              <xs:element name="DateTimeIn" msprop:Generator_ColumnPropNameInTable="DateTimeInColumn" msprop:Generator_ColumnPropNameInRow="DateTimeIn" msprop:Generator_UserColumnName="DateTimeIn" msprop:Generator_ColumnVarNameInTable="columnDateTimeIn" type="xs:dateTime" minOccurs="0" />
+              <xs:element name="DateTimeOut" msprop:Generator_ColumnPropNameInTable="DateTimeOutColumn" msprop:Generator_ColumnPropNameInRow="DateTimeOut" msprop:Generator_UserColumnName="DateTimeOut" msprop:Generator_ColumnVarNameInTable="columnDateTimeOut" type="xs:dateTime" minOccurs="0" />
+              <xs:element name="TrxType" msprop:Generator_ColumnPropNameInTable="TrxTypeColumn" msprop:Generator_ColumnPropNameInRow="TrxType" msprop:Generator_UserColumnName="TrxType" msprop:Generator_ColumnVarNameInTable="columnTrxType" type="xs:string" minOccurs="0" />
+              <xs:element name="Customer" msprop:Generator_ColumnPropNameInTable="CustomerColumn" msprop:Generator_ColumnPropNameInRow="Customer" msprop:Generator_UserColumnName="Customer" msprop:Generator_ColumnVarNameInTable="columnCustomer" type="xs:string" minOccurs="0" />
+              <xs:element name="Transporter" msprop:Generator_ColumnPropNameInTable="TransporterColumn" msprop:Generator_ColumnPropNameInRow="Transporter" msprop:Generator_UserColumnName="Transporter" msprop:Generator_ColumnVarNameInTable="columnTransporter" type="xs:string" minOccurs="0" />
+              <xs:element name="Products" msprop:Generator_ColumnPropNameInTable="ProductsColumn" msprop:Generator_ColumnPropNameInRow="Products" msprop:Generator_UserColumnName="Products" msprop:Generator_ColumnVarNameInTable="columnProducts" type="xs:string" minOccurs="0" />
+              <xs:element name="Vehicles" msprop:Generator_ColumnPropNameInTable="VehiclesColumn" msprop:Generator_ColumnPropNameInRow="Vehicles" msprop:Generator_UserColumnName="Vehicles" msprop:Generator_ColumnVarNameInTable="columnVehicles" type="xs:string" minOccurs="0" />
+              <xs:element name="Gross_x0020_" msprop:Generator_ColumnPropNameInTable="Gross_Column" msprop:Generator_ColumnPropNameInRow="Gross_" msprop:Generator_UserColumnName="Gross " msprop:Generator_ColumnVarNameInTable="columnGross_" type="xs:decimal" minOccurs="0" />
+              <xs:element name="Tare_x0020_" msdata:Caption="DataColumn5" msprop:Generator_ColumnPropNameInTable="Tare_Column" msprop:Generator_ColumnPropNameInRow="Tare_" msprop:Generator_UserColumnName="Tare " msprop:Generator_ColumnVarNameInTable="columnTare_" type="xs:decimal" minOccurs="0" />
+              <xs:element name="Netto_x0020_" msdata:Caption="DataColumn5" msprop:Generator_ColumnPropNameInTable="Netto_Column" msprop:Generator_ColumnPropNameInRow="Netto_" msprop:Generator_UserColumnName="Netto " msprop:Generator_ColumnVarNameInTable="columnNetto_" type="xs:decimal" minOccurs="0" />
+              <xs:element name="Adjust_x0020_" msdata:Caption="DataColumn5" msprop:Generator_ColumnPropNameInTable="Adjust_Column" msprop:Generator_ColumnPropNameInRow="Adjust_" msprop:Generator_UserColumnName="Adjust " msprop:Generator_ColumnVarNameInTable="columnAdjust_" type="xs:decimal" minOccurs="0" />
+              <xs:element name="AdjustedNetto_x0020_" msprop:Generator_ColumnPropNameInTable="AdjustedNetto_Column" msprop:Generator_ColumnPropNameInRow="AdjustedNetto_" msprop:Generator_UserColumnName="AdjustedNetto " msprop:Generator_ColumnVarNameInTable="columnAdjustedNetto_" type="xs:decimal" minOccurs="0" />
+              <xs:element name="Contracts" msprop:Generator_ColumnPropNameInTable="ContractsColumn" msprop:Generator_ColumnPropNameInRow="Contracts" msprop:Generator_UserColumnName="Contracts" msprop:Generator_ColumnVarNameInTable="columnContracts" type="xs:string" minOccurs="0" />
+              <xs:element name="NoOf" msprop:Generator_ColumnPropNameInTable="NoOfColumn" msprop:Generator_ColumnPropNameInRow="NoOf" msprop:Generator_UserColumnName="NoOf" msprop:Generator_ColumnVarNameInTable="columnNoOf" type="xs:int" minOccurs="0" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
