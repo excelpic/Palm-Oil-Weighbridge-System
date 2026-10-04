@@ -17,4 +17,4 @@ The portfolio snapshot contains no intentionally embedded application credential
 Before production deployment, test solution build, database initialization, administrator setup, authentication, password migration, database authentication modes, serial communication, RDLC reports, printer output, and installer behavior.
 
 ## Portfolio Positioning
-This repository demonstrates practical desktop software engineering across database integration, hardware communication, reporting, authentication, security hardening, and maintainable source organization.
+This repository demonstrates practical desktop software engineering across database integration, hardware communication, reporting, authentication, security-focused engineering, and maintainable source organization.
