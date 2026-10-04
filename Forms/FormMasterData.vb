@@ -298,16 +298,19 @@ Public Class FormMasterData
     ' TAMBAH BUTTONS
     ' =============================================
     Private Sub btnTambahCustomer_Click(sender As Object, e As EventArgs) Handles btnTambahCustomer.Click
+        If Not UserSession.Authorize(UserSession.CanAddMasterData(), "tambah data Customer") Then Return
         currentDataType = "Customer"
         ShowEditForm(0, "", "", "")
     End Sub
 
     Private Sub btnTambahTransporter_Click(sender As Object, e As EventArgs) Handles btnTambahTransporter.Click
+        If Not UserSession.Authorize(UserSession.CanAddMasterData(), "tambah data Transporter") Then Return
         currentDataType = "Transporter"
         ShowEditForm(0, "", "", "")
     End Sub
 
     Private Sub btnTambahProduct_Click(sender As Object, e As EventArgs) Handles btnTambahProduct.Click
+        If Not UserSession.Authorize(UserSession.CanAddMasterData(), "tambah data Product") Then Return
         currentDataType = "Product"
         ShowEditForm(0, "", "", "")
     End Sub
@@ -353,6 +356,8 @@ Public Class FormMasterData
     ' FUNGSI BERSAMA
     ' =============================================
     Private Sub EditSelected(dataType As String)
+        If Not UserSession.Authorize(UserSession.CanEditMasterData(), $"edit data {dataType}") Then Return
+
         Dim dgv As DataGridView = Nothing
         Select Case dataType.ToLowerInvariant()
             Case "customer" : dgv = dgvCustomer
@@ -376,6 +381,8 @@ Public Class FormMasterData
     End Sub
 
     Private Sub DeleteSelected(dataType As String)
+        If Not UserSession.Authorize(UserSession.CanDeleteMasterData(), $"hapus data {dataType}") Then Return
+
         Dim dgv As DataGridView = Nothing
         Select Case dataType.ToLowerInvariant()
             Case "customer" : dgv = dgvCustomer
@@ -463,6 +470,12 @@ Public Class FormMasterData
         Dim btnSave As New Button() With {.Text = "Simpan", .Location = New Point(120, 150), .Width = 100}
 
         AddHandler btnSave.Click, Sub()
+                                      If Not UserSession.Authorize(
+                                              If(id = 0, UserSession.CanAddMasterData(), UserSession.CanEditMasterData()),
+                                              If(id = 0, $"simpan data {currentDataType} baru", $"simpan perubahan data {currentDataType}")) Then
+                                          Return
+                                      End If
+
                                       If String.IsNullOrWhiteSpace(txtNama.Text) Then
                                           MessageBox.Show("Nama tidak boleh kosong!", "Validasi", MessageBoxButtons.OK, MessageBoxIcon.Warning)
                                           Return
@@ -625,6 +638,7 @@ Public Class FormMasterData
     Private Sub HandleIsActiveToggle(dataType As String, dgv As DataGridView, e As DataGridViewCellEventArgs)
         If e.RowIndex < 0 Then Return
         If dgv.Columns(e.ColumnIndex).Name <> "IsActive" Then Return
+        If Not UserSession.Authorize(UserSession.CanEditMasterData(), $"ubah status {dataType}") Then Return
 
         Dim currentValue As Boolean = CBool(dgv.Rows(e.RowIndex).Cells("IsActive").Value)
         Dim newValue As Boolean = Not currentValue
