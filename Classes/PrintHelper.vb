@@ -621,7 +621,7 @@ Public Class PrintHelper
             y += LINE_SPACING_115
 
             ' Baris 3: Kota + Kode Pos
-            g.DrawString(GetSetting("KotaPerusahaan", "Kab. Simalungun") & ", " & GetSetting("KodePos", "00000"), fSmall, Brushes.Black, textX, y)
+            g.DrawString(GetSetting("KotaPerusahaan", "Example Region") & ", " & GetSetting("KodePos", "00000"), fSmall, Brushes.Black, textX, y)
             y += LINE_SPACING_115
 
             ' ---> TAMBAHAN: TELEPON PERUSAHAAN <---
