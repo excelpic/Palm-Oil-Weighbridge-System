@@ -239,7 +239,21 @@ Public Class FormManajemenUser
     End Sub
 
     ' =============================================
-    ' TOMBOL HAPUS - DIPERBAIKI UNTUK HANDLE FOREIGN KEY
+    ' HELPER: BACA ROLE USER LANGSUNG DARI DATABASE
+    ' =============================================
+    Private Function TryGetUserRoleFromDb(userId As Integer, ByRef role As String) As Boolean
+        role = String.Empty
+        Dim result As Object = DatabaseHelper.ExecuteScalar(
+            "SELECT Role FROM Users WHERE UserID = @ID",
+            {New SqlParameter("@ID", userId)})
+
+        If result Is Nothing OrElse IsDBNull(result) Then Return False
+        role = result.ToString()
+        Return True
+    End Function
+
+    ' =============================================
+    ' TOMBOL HAPUS
     ' =============================================
     ' =============================================
     ' TOMBOL HAPUS - CEK AUDIT LOG DULU SEBELUM HAPUS
@@ -251,77 +265,99 @@ Public Class FormManajemenUser
         End If
 
         Dim row = dgvUser.SelectedRows(0)
-        Dim userRole As String = row.Cells("Role").Value.ToString()
-
-        If Not CanManageRole(userRole) Then
-            MessageBox.Show("Anda tidak memiliki izin untuk menghapus user dengan role ini.", "Akses Ditolak", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-            Return
-        End If
-
         Dim id As Integer = CInt(row.Cells("UserID").Value)
         Dim username As String = row.Cells("Username").Value.ToString()
 
-        ' Cegah hapus diri sendiri
         If id = UserSession.UserID Then
             MessageBox.Show("Anda tidak dapat menghapus akun Anda sendiri!", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Return
         End If
 
-        ' CEK DULU: Apakah user punya data di AuditLog?
-        Dim checkQuery As String = "SELECT COUNT(*) FROM AuditLog WHERE UserID = @ID"
-        Dim auditCount As Object = DatabaseHelper.ExecuteScalar(checkQuery, {New SqlParameter("@ID", id)})
-        Dim count As Integer = 0
-        If auditCount IsNot Nothing Then count = CInt(auditCount)
+        Dim targetRole As String = String.Empty
+        If Not TryGetUserRoleFromDb(id, targetRole) Then
+            MessageBox.Show("Data user tidak dapat diverifikasi. Operasi dibatalkan.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Return
+        End If
+
+        If Not UserSession.Authorize(CanManageRole(targetRole), $"hapus/nonaktifkan user '{username}' (role {targetRole})") Then
+            Return
+        End If
+
+        Dim auditCountObj As Object = DatabaseHelper.ExecuteScalar(
+            "SELECT COUNT(*) FROM AuditLog WHERE UserID = @ID",
+            {New SqlParameter("@ID", id)})
+
+        If auditCountObj Is Nothing OrElse IsDBNull(auditCountObj) Then
+            MessageBox.Show("Riwayat user tidak dapat diperiksa. Operasi dibatalkan.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Return
+        End If
+
+        Dim count As Integer = Convert.ToInt32(auditCountObj)
 
         If count > 0 Then
-            ' PERINGATAN KERAS UNTUK FORCE DELETE
-            Dim result = MessageBox.Show(
-            $"User '{username}' memiliki {count} data riwayat di AuditLog." & vbCrLf & vbCrLf &
-            "Jika dihapus, SEMUA RIWAYAT AKTIVITAS user ini juga akan hilang permanen." & vbCrLf & vbCrLf &
-            "Yakin ingin PAKSA HAPUS user ini beserta seluruh datanya?",
-            "Peringatan Hapus Permanen",
-            MessageBoxButtons.YesNo, MessageBoxIcon.Warning)
+            Dim confirm = MessageBox.Show(
+                $"User '{username}' memiliki {count} catatan riwayat aktivitas." & vbCrLf & vbCrLf &
+                "Demi kelengkapan jejak audit, user ini tidak dapat dihapus." & vbCrLf &
+                "User akan DINONAKTIFKAN (tidak bisa login), riwayatnya tetap tersimpan." & vbCrLf & vbCrLf &
+                "Nonaktifkan user ini?",
+                "Nonaktifkan User",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question)
 
-            If result = DialogResult.Yes Then
-                Try
-                    ' 1. HAPUS DULU DATANYA DI AUDIT LOG (Supaya tidak error Foreign Key)
-                    Dim deleteLogQuery As String = "DELETE FROM AuditLog WHERE UserID = @ID"
-                    DatabaseHelper.ExecuteNonQuery(deleteLogQuery, {New SqlParameter("@ID", id)})
+            If confirm <> DialogResult.Yes Then Return
 
-                    ' 2. BARU HAPUS USERNYA
-                    Dim deleteUserQuery As String = "DELETE FROM Users WHERE UserID = @ID"
-                    Dim deleteSuccess As Integer = DatabaseHelper.ExecuteNonQuery(deleteUserQuery, {New SqlParameter("@ID", id)})
+            Try
+                Dim rows As Integer = DatabaseHelper.ExecuteNonQuery(
+                    "UPDATE Users SET IsActive = 0, UpdatedAt = GETDATE(), UpdatedBy = @UpdatedBy WHERE UserID = @ID",
+                    {New SqlParameter("@UpdatedBy", UserSession.UserID),
+                     New SqlParameter("@ID", id)})
 
-                    If deleteSuccess > 0 Then
-                        MessageBox.Show($"User '{username}' dan semua riwayatnya berhasil dihapus permanen.", "Sukses", MessageBoxButtons.OK, MessageBoxIcon.Information)
-                        LoadData()
-                    End If
-                Catch ex As Exception
-                    Debug.WriteLine("[FormManajemenUser.Delete] Error: " & ex.ToString())
-                    MessageBox.Show("Gagal menghapus user.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-                End Try
-            End If
+                If rows > 0 Then
+                    Try
+                        DatabaseHelper.InsertAuditLog(
+                            UserSession.UserID, "DEACTIVATE_USER", Nothing, "Users", id,
+                            "IsActive: True", "IsActive: False",
+                            $"Nonaktifkan user '{username}' ({targetRole}); {count} riwayat audit dipertahankan")
+                    Catch exAudit As Exception
+                        Debug.WriteLine($"[AuditLog] Error: {exAudit.Message}")
+                    End Try
+
+                    MessageBox.Show($"User '{username}' dinonaktifkan. Riwayatnya tetap tersimpan.", "Sukses", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                    LoadData()
+                End If
+            Catch ex As Exception
+                Debug.WriteLine("[FormManajemenUser.Deactivate] Error: " & ex.ToString())
+                MessageBox.Show("Gagal menonaktifkan user.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End Try
         Else
-            ' Hapus biasa (tidak ada audit log)
-            Dim confirmResult = MessageBox.Show(
-            $"Yakin hapus user '{username}' secara permanen?",
-            "Konfirmasi Hapus",
-            MessageBoxButtons.YesNo, MessageBoxIcon.Question)
+            Dim confirm = MessageBox.Show(
+                $"Yakin hapus user '{username}' secara permanen?",
+                "Konfirmasi Hapus",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question)
 
-            If confirmResult = DialogResult.Yes Then
-                Try
-                    Dim deleteQuery As String = "DELETE FROM Users WHERE UserID = @ID"
-                    Dim deleteSuccess As Integer = DatabaseHelper.ExecuteNonQuery(deleteQuery, {New SqlParameter("@ID", id)})
+            If confirm <> DialogResult.Yes Then Return
 
-                    If deleteSuccess > 0 Then
-                        MessageBox.Show($"User '{username}' berhasil dihapus.", "Sukses", MessageBoxButtons.OK, MessageBoxIcon.Information)
-                        LoadData()
-                    End If
-                Catch ex As Exception
-                    Debug.WriteLine("[FormManajemenUser] Error: " & ex.ToString())
-                    MessageBox.Show("Operasi user gagal.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-                End Try
-            End If
+            Try
+                Dim rows As Integer = DatabaseHelper.ExecuteNonQuery(
+                    "DELETE FROM Users WHERE UserID = @ID",
+                    {New SqlParameter("@ID", id)})
+
+                If rows > 0 Then
+                    Try
+                        DatabaseHelper.InsertAuditLog(
+                            UserSession.UserID, "DELETE_USER", Nothing, "Users", id,
+                            $"Username: {username}, Role: {targetRole}", Nothing,
+                            $"Hapus permanen user '{username}' ({targetRole}); tanpa riwayat audit")
+                    Catch exAudit As Exception
+                        Debug.WriteLine($"[AuditLog] Error: {exAudit.Message}")
+                    End Try
+
+                    MessageBox.Show($"User '{username}' berhasil dihapus.", "Sukses", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                    LoadData()
+                End If
+            Catch ex As Exception
+                Debug.WriteLine("[FormManajemenUser.Delete] Error: " & ex.ToString())
+                MessageBox.Show("Operasi user gagal.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End Try
         End If
     End Sub
 
@@ -457,8 +493,19 @@ Public Class FormManajemenUser
                                             Return
                                         End If
 
-                                        Try
-                                            Dim hashedPassword As String = PasswordHasher.HashPassword(txtPasswordBaru.Text)
+                                        Dim targetRoleNow As String = String.Empty
+                                        If userId <> UserSession.UserID AndAlso Not TryGetUserRoleFromDb(userId, targetRoleNow) Then
+                                            MessageBox.Show("Data user tidak dapat diverifikasi. Operasi dibatalkan.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                                            Return
+                                        End If
+
+                                        If userId = UserSession.UserID Then
+                                            targetRoleNow = UserSession.Role
+                                        ElseIf Not UserSession.Authorize(CanManageRole(targetRoleNow), $"reset password user '{username}' (role {targetRoleNow})") Then
+                                            Return
+                                        End If
+
+                                        Dim hashedPassword As String = PasswordHasher.HashPassword(txtPasswordBaru.Text)
                                             Dim query As String = "UPDATE Users SET PasswordHash = @Password, UpdatedAt = GETDATE(), UpdatedBy = @UpdatedBy WHERE UserID = @ID"
                                             Dim result As Integer = DatabaseHelper.ExecuteNonQuery(query, {
                                                 New SqlParameter("@Password", hashedPassword),
@@ -467,6 +514,15 @@ Public Class FormManajemenUser
                                             })
 
                                             If result > 0 Then
+                                                Try
+                                                    DatabaseHelper.InsertAuditLog(
+                                                        UserSession.UserID, "RESET_PASSWORD", Nothing, "Users", userId,
+                                                        Nothing, Nothing,
+                                                        $"Reset password user '{username}' ({targetRoleNow}) oleh {UserSession.Username}")
+                                                Catch exAudit As Exception
+                                                    Debug.WriteLine($"[AuditLog] Error: {exAudit.Message}")
+                                                End Try
+
                                                 MessageBox.Show($"Password user '{username}' berhasil diubah.", "Sukses", MessageBoxButtons.OK, MessageBoxIcon.Information)
                                                 frm.Close()
                                             Else
@@ -812,7 +868,7 @@ Public Class FormManajemenUser
                                             Dim targetRole As String = cmbRole.SelectedItem.ToString()
                                             Dim targetTransType As String = cmbAksesData.SelectedItem.ToString()
 
-                                            If id > 0 AndAlso id <> UserSession.UserID AndAlso Not CanManageRole(targetRole) Then
+                                            If id <> UserSession.UserID AndAlso Not CanManageRole(targetRole) Then
                                                 MessageBox.Show("Anda tidak memiliki izin untuk memberikan role tersebut.", "Akses Ditolak", MessageBoxButtons.OK, MessageBoxIcon.Warning)
                                                 Return
                                             End If

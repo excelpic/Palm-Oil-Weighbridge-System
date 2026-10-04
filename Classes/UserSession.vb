@@ -200,7 +200,11 @@ Public Class UserSession
     End Function
 
     Public Shared Function CanEditIndikator() As Boolean
-        Return IsProgrammer()
+        Return IsProgrammer() OrElse IsDirektur()
+    End Function
+
+    Public Shared Function CanEditDatabaseConnection() As Boolean
+        Return IsProgrammer() OrElse IsDirektur()
     End Function
 
     ' =============================================
@@ -298,6 +302,32 @@ Public Class UserSession
     Public Shared Function CanViewAllTransType() As Boolean
         Return String.IsNullOrEmpty(AllowedTransType) OrElse
                AllowedTransType.Equals("SEMUA", StringComparison.OrdinalIgnoreCase)
+    End Function
+
+    Public Shared Function Authorize(isAllowed As Boolean, actionName As String) As Boolean
+        If isAllowed AndAlso IsLoggedIn() Then Return True
+
+        Try
+            DatabaseHelper.InsertAuditLog(
+                UserID,
+                "ACCESS_DENIED",
+                Nothing,
+                Nothing,
+                Nothing,
+                Nothing,
+                Nothing,
+                "Ditolak: " & actionName & " (role: " & Role & ")")
+        Catch ex As Exception
+            Debug.WriteLine("[UserSession.Authorize] Audit error: " & ex.Message)
+        End Try
+
+        System.Windows.Forms.MessageBox.Show(
+            "Anda tidak memiliki izin untuk: " & actionName,
+            "Akses Ditolak",
+            System.Windows.Forms.MessageBoxButtons.OK,
+            System.Windows.Forms.MessageBoxIcon.Warning)
+
+        Return False
     End Function
 
     ' =============================================

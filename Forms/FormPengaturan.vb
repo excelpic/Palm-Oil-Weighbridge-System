@@ -99,6 +99,8 @@ Public Class FormPengaturan
             ' 3. Load pengaturan database
             LoadDatabaseSettings()
 
+            ApplyPermissionLocks()
+
             ' Tampilkan ringkasan jika ada error
             If loadErrors.Count > 0 Then
                 ShowErrorSummary("Form Load", loadErrors)
@@ -833,7 +835,32 @@ Public Class FormPengaturan
     ' =============================================
     ' TOMBOL SIMPAN
     ' =============================================
+    Private Sub ApplyPermissionLocks()
+        Dim canCompany As Boolean = UserSession.CanEditPerusahaan()
+        Dim canIndicator As Boolean = UserSession.CanEditIndikator()
+        Dim canDbConn As Boolean = UserSession.CanEditDatabaseConnection()
+
+        For Each c As Control In New Control() {txtNamaPerusahaan, txtAlamatPerusahaan, txtKotaPerusahaan, txtTeleponPerusahaan,
+                                  txtFaxPerusahaan, txtEmailPerusahaan, txtLogoPath, btnBrowseLogo, btnHapusLogo}
+            c.Enabled = canCompany
+        Next
+
+        For Each c As Control In New Control() {cmbComPort, cmbBaudRate, cmbDataBits, cmbParity, cmbStopBits, cmbProtocol,
+                                  txtKapasitas, txtDivisi, cmbMerekIndikator, cmbTipeIndikator}
+            c.Enabled = canIndicator
+        Next
+
+        For Each c As Control In New Control() {txtServerName, txtDatabaseName, rbWindowsAuth, rbSQLAuth,
+                                  txtSQLUsername, txtSQLPassword, btnTestDB, btnSimpanDB}
+            c.Enabled = canDbConn
+        Next
+
+        btnResetDefault.Enabled = canCompany AndAlso canIndicator
+    End Sub
+
     Private Sub btnSimpan_Click(sender As Object, e As EventArgs) Handles btnSimpan.Click
+        If Not UserSession.Authorize(UserSession.CanAccessSettings(), "simpan pengaturan sistem") Then Return
+
         If MessageBox.Show("Simpan semua pengaturan?", "Konfirmasi",
                           MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.No Then
             Return
@@ -849,7 +876,7 @@ Public Class FormPengaturan
 
             ' Simpan ke My.Settings (LOCAL)
             Try
-                SaveLocalSettings()
+                If UserSession.CanEditIndikator() Then SaveLocalSettings()
             Catch ex As Exception
                 LogWarning("Failed to save local settings: " & ex.ToString())
                 saveErrors.Add("Local Settings: Gagal menyimpan pengaturan")
@@ -913,25 +940,29 @@ Public Class FormPengaturan
         Dim settings As New Dictionary(Of String, String)
 
         ' === TAB PERUSAHAAN ===
-        settings.Add("NamaPerusahaan", GetTextBoxValue(txtNamaPerusahaan))
-        settings.Add("AlamatPerusahaan", GetTextBoxValue(txtAlamatPerusahaan))
-        settings.Add("KotaPerusahaan", GetTextBoxValue(txtKotaPerusahaan))
-        settings.Add("TeleponPerusahaan", GetTextBoxValue(txtTeleponPerusahaan))
-        settings.Add("KodePos", GetTextBoxValue(txtFaxPerusahaan))
-        settings.Add("EmailPerusahaan", GetTextBoxValue(txtEmailPerusahaan))
-        settings.Add("LogoPath", GetTextBoxValue(txtLogoPath))
+        If UserSession.CanEditPerusahaan() Then
+            settings.Add("NamaPerusahaan", GetTextBoxValue(txtNamaPerusahaan))
+            settings.Add("AlamatPerusahaan", GetTextBoxValue(txtAlamatPerusahaan))
+            settings.Add("KotaPerusahaan", GetTextBoxValue(txtKotaPerusahaan))
+            settings.Add("TeleponPerusahaan", GetTextBoxValue(txtTeleponPerusahaan))
+            settings.Add("KodePos", GetTextBoxValue(txtFaxPerusahaan))
+            settings.Add("EmailPerusahaan", GetTextBoxValue(txtEmailPerusahaan))
+            settings.Add("LogoPath", GetTextBoxValue(txtLogoPath))
+        End If
 
         ' === TAB TIMBANGAN ===
-        settings.Add("COM_PORT", SafeGetComboValue(cmbComPort, "COM3"))
-        settings.Add("BAUD_RATE", SafeGetComboValue(cmbBaudRate, "9600"))
-        settings.Add("DATA_BITS", SafeGetComboValue(cmbDataBits, "8"))
-        settings.Add("PARITY", SafeGetComboValue(cmbParity, "None"))
-        settings.Add("STOP_BITS", SafeGetComboValue(cmbStopBits, "1"))
-        settings.Add("PROTOCOL", SafeGetComboValue(cmbProtocol, "STANDARD"))
-        settings.Add("KapasitasTimbangan", GetTextBoxValue(txtKapasitas))
-        settings.Add("DivisiTimbangan", GetTextBoxValue(txtDivisi))
-        settings.Add("SCALE_BRAND", SafeGetComboValue(cmbMerekIndikator, "GSC"))
-        settings.Add("SCALE_TYPE", SafeGetComboValue(cmbTipeIndikator, ""))
+        If UserSession.CanEditIndikator() Then
+            settings.Add("COM_PORT", SafeGetComboValue(cmbComPort, "COM3"))
+            settings.Add("BAUD_RATE", SafeGetComboValue(cmbBaudRate, "9600"))
+            settings.Add("DATA_BITS", SafeGetComboValue(cmbDataBits, "8"))
+            settings.Add("PARITY", SafeGetComboValue(cmbParity, "None"))
+            settings.Add("STOP_BITS", SafeGetComboValue(cmbStopBits, "1"))
+            settings.Add("PROTOCOL", SafeGetComboValue(cmbProtocol, "STANDARD"))
+            settings.Add("KapasitasTimbangan", GetTextBoxValue(txtKapasitas))
+            settings.Add("DivisiTimbangan", GetTextBoxValue(txtDivisi))
+            settings.Add("SCALE_BRAND", SafeGetComboValue(cmbMerekIndikator, "GSC"))
+            settings.Add("SCALE_TYPE", SafeGetComboValue(cmbTipeIndikator, ""))
+        End If
 
         ' === TAB PRINTER STRUK (TIKET KELUAR) ===
         settings.Add("PrinterName", SafeGetComboValue(cmbPrinter, ""))
@@ -1141,6 +1172,8 @@ Public Class FormPengaturan
     ' TAB PERUSAHAAN - BROWSE LOGO
     ' =============================================
     Private Sub btnBrowseLogo_Click(sender As Object, e As EventArgs) Handles btnBrowseLogo.Click
+        If Not UserSession.Authorize(UserSession.CanEditPerusahaan(), "ubah logo perusahaan") Then Return
+
         Try
             Using ofd As New OpenFileDialog()
                 ofd.Title = "Pilih Logo Perusahaan"
@@ -1178,6 +1211,8 @@ Public Class FormPengaturan
     End Sub
 
     Private Sub btnHapusLogo_Click(sender As Object, e As EventArgs) Handles btnHapusLogo.Click
+        If Not UserSession.Authorize(UserSession.CanEditPerusahaan(), "hapus logo perusahaan") Then Return
+
         If MessageBox.Show("Hapus logo perusahaan?", "Konfirmasi",
                           MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.Yes Then
             txtLogoPath.Clear()
@@ -1192,6 +1227,9 @@ Public Class FormPengaturan
     ' RESET DEFAULT
     ' =============================================
     Private Sub btnResetDefault_Click(sender As Object, e As EventArgs) Handles btnResetDefault.Click
+        If Not UserSession.Authorize(UserSession.CanEditPerusahaan() AndAlso UserSession.CanEditIndikator(),
+                                     "reset pengaturan ke default") Then Return
+
         If MessageBox.Show("Reset SEMUA pengaturan ke default?", "Konfirmasi Reset",
                           MessageBoxButtons.YesNo, MessageBoxIcon.Warning) = DialogResult.No Then
             Return
@@ -1381,6 +1419,8 @@ Public Class FormPengaturan
     End Sub
 
     Private Sub btnTestDB_Click(sender As Object, e As EventArgs) Handles btnTestDB.Click
+        If Not UserSession.Authorize(UserSession.CanEditDatabaseConnection(), "uji koneksi database") Then Return
+
         ' Validasi input
         If String.IsNullOrWhiteSpace(txtServerName.Text) Then
             MessageBox.Show("Server Name tidak boleh kosong!", "Validasi", MessageBoxButtons.OK, MessageBoxIcon.Warning)
@@ -1513,6 +1553,8 @@ Public Class FormPengaturan
     End Sub
 
     Private Sub btnSimpanDB_Click(sender As Object, e As EventArgs) Handles btnSimpanDB.Click
+        If Not UserSession.Authorize(UserSession.CanEditDatabaseConnection(), "ubah koneksi database") Then Return
+
         ' Validasi
         If String.IsNullOrWhiteSpace(txtServerName.Text) Then
             MessageBox.Show("Server Name tidak boleh kosong!", "Validasi", MessageBoxButtons.OK, MessageBoxIcon.Warning)
