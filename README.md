@@ -15,7 +15,7 @@ This project is a Windows Forms desktop application developed in **VB.NET** for 
 - ticket and thermal printing
 - RDLC reporting and export
 - user access control and audit logging
-- configuration and security hardening
+- configuration, access control, and security-focused engineering
 
 The repository is published as a **portfolio software project**. Production deployment requires environment-specific configuration and validation.
 
@@ -29,11 +29,11 @@ The repository is published as a **portfolio software project**. Production depl
 - Daily transaction reporting with RDLC / ReportViewer
 - Export workflows for reporting data
 - User authentication and role-based transaction access
-- Audit logging for important application activities
+- Audit logging for selected application and administrative activities
 - Automatic database initialization and lightweight schema migrations
 - Protected local configuration for database connectivity
 - Parameterized SQL for application-supplied values
-- Hardened password storage for application accounts
+- PBKDF2-based password hashing for new and updated application credentials
 
 ## Technology Stack
 
@@ -49,7 +49,7 @@ The repository is published as a **portfolio software project**. Production depl
 | Weighbridge Integration | Serial / COM Port |
 | Printing | Windows printers and thermal printing workflows |
 | Spreadsheet Export | EPPlus |
-| PDF Export | iTextSharp |
+| PDF Export | Microsoft Excel automation |
 | Security | .NET cryptography and protected local configuration |
 
 ## System Workflow
@@ -127,10 +127,10 @@ The public repository does not intentionally contain production transactions, co
 The portfolio snapshot includes security-focused improvements such as:
 
 - removal of embedded application credentials
-- hardened application password storage
+- PBKDF2-based password hashing for application credentials
 - protected local database configuration
 - parameterized SQL for application values
-- controlled user-facing database errors
+- generalized user-facing database errors
 - repository hygiene that excludes local credentials and generated artifacts
 
 For the public repository, security details are intentionally kept at a high level. See [SECURITY.md](SECURITY.md).
@@ -168,6 +168,6 @@ Third-party dependencies remain subject to their own licenses and terms. See [do
 
 ## Project Status
 
-**Portfolio-ready source snapshot** with security hardening, repository hygiene, database documentation, and development documentation.
+**Portfolio-ready source snapshot** with baseline security improvements, repository hygiene, database documentation, and development documentation.
 
 The project remains suitable for continued functional testing, maintenance, and incremental improvement.
