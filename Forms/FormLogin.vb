@@ -149,7 +149,11 @@ Public Class FormLogin
             End If
 
         Catch ex As Exception
-            Debug.WriteLine("CheckAndSetupDatabase error: " & ex.Message)
+            Debug.WriteLine("CheckAndSetupDatabase error: " & ex.ToString())
+            _initialSetupRequired = False
+            btnLogin.Enabled = False
+            lblStatus.Text = "⚠ DATABASE CHECK FAILED"
+            lblStatus.ForeColor = Color.Crimson
         End Try
     End Sub
 
@@ -238,7 +242,7 @@ Public Class FormLogin
 
         Try
             Dim query As String = "INSERT INTO Users (Username, PasswordHash, NamaLengkap, Role, IsActive, AllowedTransType) " &
-                                  "VALUES (@Username, @Password, @NamaLengkap, 'Programmer', 1, 'SEMUA')"
+                                  "VALUES (@Username, @Password, @NamaLengkap, 'Direktur', 1, 'SEMUA')"
 
             Dim params As SqlParameter() = {
                 New SqlParameter("@Username", username),
