@@ -985,6 +985,17 @@ Public Class FormInputTimbangan
             If _currentTimbangID = 0 Then
                 If Not ValidasiInputDasar() Then Return
 
+                Dim transType As String = If(cmbTransType IsNot Nothing AndAlso cmbTransType.SelectedItem IsNot Nothing,
+                                             cmbTransType.SelectedItem.ToString().Trim().ToUpperInvariant(), "")
+                If transType <> "JUAL" AndAlso transType <> "BELI" Then
+                    MessageBox.Show("Jenis transaksi tidak valid.", "Validasi", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                    Return
+                End If
+                If Not UserSession.CanViewTransType(transType) Then
+                    UserSession.Authorize(False, "membuat transaksi " & transType)
+                    Return
+                End If
+
                 ' Konfirmasi
                 If MessageBox.Show($"Simpan data timbangan pertama?" & vbCrLf & vbCrLf &
                     $"No. Polisi: {txtNoPolisi.Text}" & vbCrLf &
