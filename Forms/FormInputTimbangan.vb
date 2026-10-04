@@ -280,7 +280,15 @@ Public Class FormInputTimbangan
                 cmbTransType.Items.Clear()
                 cmbTransType.Items.Add("JUAL")
                 cmbTransType.Items.Add("BELI")
-                cmbTransType.SelectedIndex = 0 ' Default: JUAL
+
+                Dim allowedTransType As String = If(UserSession.AllowedTransType, "SEMUA").Trim().ToUpperInvariant()
+                If allowedTransType = "JUAL" OrElse allowedTransType = "BELI" Then
+                    cmbTransType.SelectedItem = allowedTransType
+                    cmbTransType.Enabled = False
+                Else
+                    cmbTransType.SelectedIndex = 0
+                    cmbTransType.Enabled = True
+                End If
             End If
 
         Catch ex As Exception
