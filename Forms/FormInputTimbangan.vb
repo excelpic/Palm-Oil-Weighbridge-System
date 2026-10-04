@@ -1105,7 +1105,15 @@ Public Class FormInputTimbangan
             Dim noSIM As String = If(txtNoSIM IsNot Nothing, txtNoSIM.Text.Trim(), "")
             Dim alamat As String = If(txtAlamat IsNot Nothing, txtAlamat.Text.Trim(), "")
             Dim transType As String = If(cmbTransType IsNot Nothing AndAlso cmbTransType.SelectedItem IsNot Nothing,
-                                 cmbTransType.SelectedItem.ToString(), "JUAL")
+                                 cmbTransType.SelectedItem.ToString().Trim().ToUpperInvariant(), "")
+            If transType <> "JUAL" AndAlso transType <> "BELI" Then
+                MessageBox.Show("Jenis transaksi tidak valid.", "Validasi", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                Return
+            End If
+            If Not UserSession.CanViewTransType(transType) Then
+                UserSession.Authorize(False, "membuat transaksi " & transType)
+                Return
+            End If
             Dim segelAtas As String = If(txtSegelAtas IsNot Nothing, txtSegelAtas.Text.Trim(), "")
             Dim segelBawah As String = If(txtSegelBawah IsNot Nothing, txtSegelBawah.Text.Trim(), "")
 
