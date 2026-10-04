@@ -136,7 +136,6 @@ Public Class FormAuditLog
                 Dim queryActions As String = "SELECT DISTINCT a.Action FROM AuditLog a " &
                                  "LEFT JOIN Users u ON a.UserID = u.UserID " &
                                  "WHERE a.Action IS NOT NULL AND LTRIM(RTRIM(a.Action)) <> '' " &
-                                 "" &
                                  "ORDER BY a.Action"
                 Dim dtActions As DataTable = DatabaseHelper.ExecuteQuery(queryActions)
 
