@@ -462,7 +462,6 @@ Public Class DatabaseHelper
                                      Optional newValue As String = Nothing,
                                      Optional keterangan As String = Nothing)
         Try
-            If UserSession.IsProgrammer() Then Return
             If String.IsNullOrWhiteSpace(action) Then
                 action = "UNKNOWN"
             End If
@@ -500,7 +499,6 @@ Public Class DatabaseHelper
                                      newValue As String,
                                      keterangan As String)
         Try
-            If UserSession.IsProgrammer() Then Return
             If String.IsNullOrWhiteSpace(action) Then
                 action = "UNKNOWN"
             End If
