@@ -79,7 +79,7 @@ Public Class FormManajemenUser
     ' =============================================
     Private Sub LoadData()
         Try
-            Dim query As String = "SELECT UserID, Username, NamaLengkap, Role, AllowedTransType, IsActive FROM Users WHERE Username <> 'programmer'"
+            Dim query As String = "SELECT UserID, Username, NamaLengkap, Role, AllowedTransType, IsActive FROM Users"
             Dim parameters As New List(Of SqlParameter)
 
             Select Case currentUserRole.ToLowerInvariant()
@@ -159,7 +159,7 @@ Public Class FormManajemenUser
     ' =============================================
     Private Sub FilterData(keyword As String)
         Try
-            Dim query As String = "SELECT UserID, Username, NamaLengkap, Role, AllowedTransType, IsActive FROM Users WHERE (Username LIKE @keyword OR NamaLengkap LIKE @keyword) AND Username <> 'programmer'"
+            Dim query As String = "SELECT UserID, Username, NamaLengkap, Role, AllowedTransType, IsActive FROM Users WHERE (Username LIKE @keyword OR NamaLengkap LIKE @keyword)"
 
             Select Case currentUserRole.ToLowerInvariant()
                 Case "krani"
@@ -222,16 +222,9 @@ Public Class FormManajemenUser
         Dim selectedUserID As Integer = CInt(row.Cells("UserID").Value)
         Dim userRole As String = row.Cells("Role").Value.ToString()
 
-        If currentUserRole.ToLowerInvariant() = "krani" Then
-            If selectedUserID <> UserSession.UserID Then
-                MessageBox.Show("Anda hanya bisa mengedit profil sendiri!", "Akses Ditolak", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-                Return
-            End If
-        Else
-            If Not CanManageRole(userRole) Then
-                MessageBox.Show("Anda tidak memiliki izin untuk mengedit user dengan role ini.", "Akses Ditolak", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-                Return
-            End If
+        If selectedUserID <> UserSession.UserID AndAlso Not CanManageRole(userRole) Then
+            MessageBox.Show("Anda tidak memiliki izin untuk mengedit user dengan role ini.", "Akses Ditolak", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
         End If
 
         Dim id As Integer = CInt(row.Cells("UserID").Value)
@@ -267,12 +260,6 @@ Public Class FormManajemenUser
 
         Dim id As Integer = CInt(row.Cells("UserID").Value)
         Dim username As String = row.Cells("Username").Value.ToString()
-
-        ' Cegah hapus user sistem
-        If username.ToLowerInvariant() = "programmer" OrElse username.ToLowerInvariant() = "admin" Then
-            MessageBox.Show("User sistem tidak dapat dihapus!", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-            Return
-        End If
 
         ' Cegah hapus diri sendiri
         If id = UserSession.UserID Then
@@ -352,19 +339,17 @@ Public Class FormManajemenUser
         Dim userRole As String = row.Cells("Role").Value.ToString()
         Dim username As String = row.Cells("Username").Value.ToString()
 
-        If currentUserRole.ToLowerInvariant() = "krani" Then
-            If selectedUserID <> UserSession.UserID Then
-                MessageBox.Show("Anda hanya bisa mengubah password sendiri!", "Akses Ditolak", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-                Return
-            End If
+        If selectedUserID = UserSession.UserID Then
             ShowChangeOwnPasswordForm(selectedUserID, username)
-        Else
-            If Not CanManageRole(userRole) Then
-                MessageBox.Show("Anda tidak memiliki izin untuk mereset password user dengan role ini.", "Akses Ditolak", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-                Return
-            End If
-            ShowResetPasswordForm(selectedUserID, username)
+            Return
         End If
+
+        If Not CanManageRole(userRole) Then
+            MessageBox.Show("Anda tidak memiliki izin untuk mereset password user dengan role ini.", "Akses Ditolak", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
+
+        ShowResetPasswordForm(selectedUserID, username)
     End Sub
 
     ' =============================================
@@ -525,15 +510,18 @@ Public Class FormManajemenUser
     ' FUNGSI CEK APAKAH BISA MANAGE ROLE TERTENTU
     ' =============================================
     Private Function CanManageRole(targetRole As String) As Boolean
+        Dim normalizedTargetRole As String = If(targetRole, String.Empty).Trim().ToLowerInvariant()
+
         Select Case currentUserRole.ToLowerInvariant()
             Case "programmer"
-                Return True
+                Return normalizedTargetRole = "programmer" OrElse
+                       normalizedTargetRole = "direktur" OrElse
+                       normalizedTargetRole = "manager" OrElse
+                       normalizedTargetRole = "krani"
             Case "direktur"
-                Return targetRole.ToLowerInvariant() <> "programmer"
+                Return normalizedTargetRole = "manager" OrElse normalizedTargetRole = "krani"
             Case "manager"
-                Return targetRole.ToLowerInvariant() = "krani" OrElse targetRole.ToLowerInvariant() = "manager"
-            Case "krani"
-                Return False
+                Return normalizedTargetRole = "krani"
             Case Else
                 Return False
         End Select
@@ -564,8 +552,8 @@ Public Class FormManajemenUser
         Dim id As Integer = CInt(dgvUser.Rows(e.RowIndex).Cells("UserID").Value)
         Dim username As String = dgvUser.Rows(e.RowIndex).Cells("Username").Value.ToString()
 
-        If username.ToLowerInvariant() = "programmer" AndAlso newValue = False Then
-            MessageBox.Show("User 'programmer' tidak dapat dinonaktifkan!", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+        If id = UserSession.UserID Then
+            MessageBox.Show("Anda tidak dapat menonaktifkan akun Anda sendiri.", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Return
         End If
 
@@ -695,9 +683,9 @@ Public Class FormManajemenUser
             Case "programmer"
                 cmbRole.Items.AddRange({"Programmer", "Direktur", "Manager", "Krani"})
             Case "direktur"
-                cmbRole.Items.AddRange({"Direktur", "Manager", "Krani"})
-            Case "manager"
                 cmbRole.Items.AddRange({"Manager", "Krani"})
+            Case "manager"
+                cmbRole.Items.Add("Krani")
             Case Else
                 cmbRole.Items.Add("Krani")
         End Select
@@ -744,6 +732,11 @@ Public Class FormManajemenUser
             .ForeColor = Color.Gray
         }
         yPos += 85
+
+        ' A user's role and transaction access cannot be changed from their own profile.
+        Dim isSelfEdit As Boolean = id > 0 AndAlso id = UserSession.UserID
+        cmbRole.Enabled = Not isSelfEdit
+        cmbAksesData.Enabled = Not isSelfEdit
 
         ' TOMBOL SIMPAN
         Dim btnSimpan As New Button() With {
@@ -816,11 +809,33 @@ Public Class FormManajemenUser
                                             Dim params As SqlParameter()
                                             Dim result As Integer = 0
                                             Dim newUserID As Integer = 0
+                                            Dim targetRole As String = cmbRole.SelectedItem.ToString()
+                                            Dim targetTransType As String = cmbAksesData.SelectedItem.ToString()
+
+                                            If id > 0 AndAlso id <> UserSession.UserID AndAlso Not CanManageRole(targetRole) Then
+                                                MessageBox.Show("Anda tidak memiliki izin untuk memberikan role tersebut.", "Akses Ditolak", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                                                Return
+                                            End If
+
+                                            If id > 0 AndAlso id = UserSession.UserID Then
+                                                targetRole = role.Trim()
+                                                targetTransType = If(String.IsNullOrWhiteSpace(allowedTransType), "SEMUA", allowedTransType.Trim().ToUpperInvariant())
+                                            End If
 
                                             If id = 0 Then
                                                 ' =============================================
                                                 ' INSERT (Tambah Baru) - DENGAN AllowedTransType
                                                 ' =============================================
+                                                Dim normalizedUsername As String = txtUsername.Text.Trim()
+                                                If normalizedUsername.Equals("programmer", StringComparison.OrdinalIgnoreCase) OrElse
+                                                   normalizedUsername.Equals("admin", StringComparison.OrdinalIgnoreCase) Then
+                                                    MessageBox.Show("Username 'programmer' dan 'admin' dicadangkan untuk penggunaan sistem.", "Username Tidak Diizinkan",
+                                                        MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                                                    txtUsername.Focus()
+                                                    txtUsername.SelectAll()
+                                                    Return
+                                                End If
+
                                                 Dim checkQuery As String = "SELECT COUNT(*) FROM Users WHERE Username = @Username"
                                                 Dim checkResult As Object = DatabaseHelper.ExecuteScalar(checkQuery, {
                                                     New SqlParameter("@Username", txtUsername.Text.Trim())
@@ -842,8 +857,8 @@ Public Class FormManajemenUser
                                                     New SqlParameter("@Username", txtUsername.Text.Trim()),
                                                     New SqlParameter("@Password", PasswordHasher.HashPassword(txtPassword.Text)),
                                                     New SqlParameter("@NamaLengkap", txtNamaLengkap.Text.Trim()),
-                                                    New SqlParameter("@Role", cmbRole.SelectedItem.ToString()),
-                                                    New SqlParameter("@AllowedTransType", cmbAksesData.SelectedItem.ToString()),
+                                                    New SqlParameter("@Role", targetRole),
+                                                    New SqlParameter("@AllowedTransType", targetTransType),
                                                     New SqlParameter("@CreatedBy", UserSession.UserID)
                                                 }
 
@@ -863,8 +878,8 @@ Public Class FormManajemenUser
                                                 query = "UPDATE Users SET NamaLengkap = @NamaLengkap, Role = @Role, AllowedTransType = @AllowedTransType, UpdatedAt = GETDATE(), UpdatedBy = @UpdatedBy WHERE UserID = @ID"
                                                 params = {
                                                     New SqlParameter("@NamaLengkap", txtNamaLengkap.Text.Trim()),
-                                                    New SqlParameter("@Role", cmbRole.SelectedItem.ToString()),
-                                                    New SqlParameter("@AllowedTransType", cmbAksesData.SelectedItem.ToString()),
+                                                    New SqlParameter("@Role", targetRole),
+                                                    New SqlParameter("@AllowedTransType", targetTransType),
                                                     New SqlParameter("@UpdatedBy", UserSession.UserID),
                                                     New SqlParameter("@ID", id)
                                                 }

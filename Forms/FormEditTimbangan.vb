@@ -5,6 +5,7 @@
 ' DENGAN FIELD NO. SEGEL
 ' =============================================
 Imports System.Data.SqlClient
+Imports System.Globalization
 
 Public Class FormEditTimbangan
 
@@ -239,6 +240,65 @@ Public Class FormEditTimbangan
     End Sub
 
     ' =============================================
+    ' VALIDASI INPUT POTONGAN
+    ' Persen: 0-100 | Kilogram: >= 0
+    ' =============================================
+    Private Function TryGetPotonganValues(ByRef potonganPersen As Decimal,
+                                          ByRef potonganKg As Decimal,
+                                          Optional showMessage As Boolean = True) As Boolean
+        potonganPersen = 0D
+        potonganKg = 0D
+
+        If Not Decimal.TryParse(txtPotonganPersen.Text.Trim(),
+                                NumberStyles.Number,
+                                CultureInfo.CurrentCulture,
+                                potonganPersen) Then
+            If showMessage Then
+                MessageBox.Show("Persentase potongan harus berupa angka yang valid.", "Validasi Potongan",
+                                MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                txtPotonganPersen.Focus()
+                txtPotonganPersen.SelectAll()
+            End If
+            Return False
+        End If
+
+        If potonganPersen < 0D OrElse potonganPersen > 100D Then
+            If showMessage Then
+                MessageBox.Show("Persentase potongan harus berada di antara 0 dan 100.", "Validasi Potongan",
+                                MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                txtPotonganPersen.Focus()
+                txtPotonganPersen.SelectAll()
+            End If
+            Return False
+        End If
+
+        If Not Decimal.TryParse(txtPotonganKg.Text.Trim(),
+                                NumberStyles.Number,
+                                CultureInfo.CurrentCulture,
+                                potonganKg) Then
+            If showMessage Then
+                MessageBox.Show("Potongan kilogram harus berupa angka yang valid.", "Validasi Potongan",
+                                MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                txtPotonganKg.Focus()
+                txtPotonganKg.SelectAll()
+            End If
+            Return False
+        End If
+
+        If potonganKg < 0D Then
+            If showMessage Then
+                MessageBox.Show("Potongan kilogram tidak boleh bernilai negatif.", "Validasi Potongan",
+                                MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                txtPotonganKg.Focus()
+                txtPotonganKg.SelectAll()
+            End If
+            Return False
+        End If
+
+        Return True
+    End Function
+
+    ' =============================================
     ' HITUNG NETTO OTOMATIS
     ' =============================================
     Private Sub HitungNetto(sender As Object, e As EventArgs)
@@ -250,8 +310,7 @@ Public Class FormEditTimbangan
 
             Decimal.TryParse(txtBeratBruto.Text.Replace(".", "").Replace(",", ""), bruto)
             Decimal.TryParse(txtBeratTara.Text.Replace(".", "").Replace(",", ""), tara)
-            Decimal.TryParse(txtPotonganPersen.Text, potonganPersen)
-            Decimal.TryParse(txtPotonganKg.Text, potonganKg)
+            If Not TryGetPotonganValues(potonganPersen, potonganKg, False) Then Return
 
             ' Hitung Netto
             Dim netto As Decimal = Math.Abs(bruto - tara)
@@ -322,6 +381,10 @@ Public Class FormEditTimbangan
                 Return
             End If
 
+            Dim potonganPersen As Decimal = 0D
+            Dim potonganKg As Decimal = 0D
+            If Not TryGetPotonganValues(potonganPersen, potonganKg, True) Then Return
+
             ' Deteksi perubahan
             Dim perubahan As String = DeteksiPerubahan()
             If String.IsNullOrEmpty(perubahan) Then
@@ -339,7 +402,7 @@ Public Class FormEditTimbangan
             End If
 
             ' Simpan
-            SimpanPerubahan(perubahan)
+            SimpanPerubahan(perubahan, potonganPersen, potonganKg)
 
         Catch ex As Exception
             Debug.WriteLine("[FormEditTimbangan] Error: " & ex.ToString())
@@ -452,16 +515,16 @@ Public Class FormEditTimbangan
     ' =============================================
     ' SIMPAN PERUBAHAN
     ' =============================================
-    Private Sub SimpanPerubahan(perubahan As String)
+    Private Sub SimpanPerubahan(perubahan As String,
+                                 potonganPersen As Decimal,
+                                 potonganKg As Decimal)
         Try
             Dim beratBruto, beratTara, beratNetto As Decimal
-            Dim potonganPersen, potonganKg, totalPotongan, beratBersih As Decimal
+            Dim totalPotongan, beratBersih As Decimal
 
             Decimal.TryParse(txtBeratBruto.Text.Replace(".", "").Replace(",", ""), beratBruto)
             Decimal.TryParse(txtBeratTara.Text.Replace(".", "").Replace(",", ""), beratTara)
             Decimal.TryParse(txtBeratNetto.Text.Replace(".", "").Replace(",", ""), beratNetto)
-            Decimal.TryParse(txtPotonganPersen.Text, potonganPersen)
-            Decimal.TryParse(txtPotonganKg.Text, potonganKg)
             Decimal.TryParse(txtTotalPotongan.Text.Replace(".", "").Replace(",", ""), totalPotongan)
             Decimal.TryParse(txtBeratBersih.Text.Replace(".", "").Replace(",", ""), beratBersih)
 

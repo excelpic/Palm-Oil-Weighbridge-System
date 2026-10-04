@@ -136,7 +136,6 @@ Public Class FormAuditLog
                 Dim queryActions As String = "SELECT DISTINCT a.Action FROM AuditLog a " &
                                  "LEFT JOIN Users u ON a.UserID = u.UserID " &
                                  "WHERE a.Action IS NOT NULL AND LTRIM(RTRIM(a.Action)) <> '' " &
-                                 "AND ISNULL(u.Role, '') <> 'Programmer' " &
                                  "ORDER BY a.Action"
                 Dim dtActions As DataTable = DatabaseHelper.ExecuteQuery(queryActions)
 
@@ -168,7 +167,7 @@ Public Class FormAuditLog
                 Dim queryUsers As String = "SELECT DISTINCT u.UserID, u.NamaLengkap, u.Username, u.Role " &
                                "FROM AuditLog a " &
                                "INNER JOIN Users u ON a.UserID = u.UserID " &
-                               "WHERE u.NamaLengkap IS NOT NULL AND ISNULL(u.Role, '') <> 'Programmer' " &
+                               "WHERE u.NamaLengkap IS NOT NULL " &
                                "ORDER BY u.NamaLengkap"
                 Dim dtUsers As DataTable = DatabaseHelper.ExecuteQuery(queryUsers)
 
@@ -199,7 +198,7 @@ Public Class FormAuditLog
             Dim prevEnd As DateTime = filterStart
 
             ' TOTAL LOG DALAM RANGE
-            Dim qTotal As String = "SELECT COUNT(*) FROM AuditLog a LEFT JOIN Users u ON a.UserID = u.UserID WHERE a.CreatedAt >= @Start AND a.CreatedAt < @End AND ISNULL(u.Role, '') <> 'Programmer'"
+            Dim qTotal As String = "SELECT COUNT(*) FROM AuditLog a LEFT JOIN Users u ON a.UserID = u.UserID WHERE a.CreatedAt >= @Start AND a.CreatedAt < @End "
             Dim totalInRange As Object = DatabaseHelper.ExecuteScalar(qTotal, {
                 New SqlParameter("@Start", filterStart),
                 New SqlParameter("@End", filterEnd)
@@ -216,7 +215,7 @@ Public Class FormAuditLog
             UpdateChangeLabel(lblCardTotalChange, intTotalInRange, intTotalPrev)
 
             ' LOGIN/LOGOUT
-            Dim qLogin As String = "SELECT COUNT(*) FROM AuditLog a LEFT JOIN Users u ON a.UserID = u.UserID WHERE a.CreatedAt >= @Start AND a.CreatedAt < @End AND (a.Action LIKE '%LOGIN%' OR a.Action LIKE '%LOGOUT%') AND ISNULL(u.Role, '') <> 'Programmer'"
+            Dim qLogin As String = "SELECT COUNT(*) FROM AuditLog a LEFT JOIN Users u ON a.UserID = u.UserID WHERE a.CreatedAt >= @Start AND a.CreatedAt < @End AND (a.Action LIKE '%LOGIN%' OR a.Action LIKE '%LOGOUT%') "
 
             Dim loginInRange As Object = DatabaseHelper.ExecuteScalar(qLogin, {
                 New SqlParameter("@Start", filterStart),
@@ -234,7 +233,7 @@ Public Class FormAuditLog
             UpdateChangeLabel(lblCardLoginChange, intLoginInRange, intLoginPrev)
 
             ' PERUBAHAN DATA
-            Dim qChanges As String = "SELECT COUNT(*) FROM AuditLog a LEFT JOIN Users u ON a.UserID = u.UserID WHERE a.CreatedAt >= @Start AND a.CreatedAt < @End AND (a.Action LIKE '%INSERT%' OR a.Action LIKE '%UPDATE%' OR a.Action LIKE '%DELETE%' OR a.Action LIKE '%SAVE%' OR a.Action LIKE '%SIMPAN%' OR a.Action LIKE '%TAMBAH%' OR a.Action LIKE '%EDIT%' OR a.Action LIKE '%HAPUS%' OR a.Action LIKE '%RESET%') AND ISNULL(u.Role, '') <> 'Programmer'"
+            Dim qChanges As String = "SELECT COUNT(*) FROM AuditLog a LEFT JOIN Users u ON a.UserID = u.UserID WHERE a.CreatedAt >= @Start AND a.CreatedAt < @End AND (a.Action LIKE '%INSERT%' OR a.Action LIKE '%UPDATE%' OR a.Action LIKE '%DELETE%' OR a.Action LIKE '%SAVE%' OR a.Action LIKE '%SIMPAN%' OR a.Action LIKE '%TAMBAH%' OR a.Action LIKE '%EDIT%' OR a.Action LIKE '%HAPUS%' OR a.Action LIKE '%RESET%') "
 
             Dim changesInRange As Object = DatabaseHelper.ExecuteScalar(qChanges, {
                 New SqlParameter("@Start", filterStart),
@@ -252,7 +251,7 @@ Public Class FormAuditLog
             UpdateChangeLabel(lblCardChangesChange, intChangesInRange, intChangesPrev)
 
             ' ERROR/WARNING
-            Dim qErrors As String = "SELECT COUNT(*) FROM AuditLog a LEFT JOIN Users u ON a.UserID = u.UserID WHERE a.CreatedAt >= @Start AND a.CreatedAt < @End AND (a.Action LIKE '%ERROR%' OR a.Action LIKE '%FAIL%' OR a.Action LIKE '%WARNING%' OR a.Action LIKE '%GAGAL%') AND ISNULL(u.Role, '') <> 'Programmer'"
+            Dim qErrors As String = "SELECT COUNT(*) FROM AuditLog a LEFT JOIN Users u ON a.UserID = u.UserID WHERE a.CreatedAt >= @Start AND a.CreatedAt < @End AND (a.Action LIKE '%ERROR%' OR a.Action LIKE '%FAIL%' OR a.Action LIKE '%WARNING%' OR a.Action LIKE '%GAGAL%') "
 
             Dim errorsInRange As Object = DatabaseHelper.ExecuteScalar(qErrors, {
                 New SqlParameter("@Start", filterStart),
@@ -324,7 +323,7 @@ Public Class FormAuditLog
             ' Build WHERE clause
             Dim whereClause As String = "WHERE 1=1 "
             Dim params As New List(Of SqlParameter)
-            whereClause &= "AND ISNULL(u.Role, '') <> 'Programmer' "
+            whereClause &= ""
 
             ' ==========================================
             ' FILTER TANGGAL - DIPERBAIKI

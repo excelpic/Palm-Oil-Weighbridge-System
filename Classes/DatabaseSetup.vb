@@ -380,17 +380,16 @@ END
     ' =============================================
     Public Shared Function HasUsers() As Boolean
         Try
-            Dim query As String = "SELECT COUNT(*) FROM Users"
-            Dim dt As DataTable = DatabaseHelper.ExecuteQuery(query)
-
-            If dt IsNot Nothing AndAlso dt.Rows.Count > 0 Then
-                Return CInt(dt.Rows(0)(0)) > 0
-            End If
-
-            Return False
+            Using conn As SqlConnection = DatabaseHelper.GetConnection()
+                Using cmd As New SqlCommand("SELECT COUNT(*) FROM Users", conn)
+                    cmd.CommandTimeout = 30
+                    conn.Open()
+                    Return Convert.ToInt32(cmd.ExecuteScalar()) > 0
+                End Using
+            End Using
         Catch ex As Exception
             Debug.WriteLine("[DatabaseSetup.HasUsers] Error: " & ex.ToString())
-            Return False
+            Throw New InvalidOperationException("Unable to determine whether users exist.", ex)
         End Try
     End Function
 

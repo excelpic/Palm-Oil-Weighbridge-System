@@ -23,7 +23,6 @@ Partial Class FormInputTimbangan
         Me.lblComPort = New System.Windows.Forms.Label()
         Me.lblStatusTimbangan = New System.Windows.Forms.Label()
         Me.PanelTombol = New System.Windows.Forms.Panel()
-        Me.chkSimulasi = New System.Windows.Forms.CheckBox()
         Me.btnTutup = New System.Windows.Forms.Button()
         Me.btnBatal = New System.Windows.Forms.Button()
         Me.btnCetak = New System.Windows.Forms.Button()
@@ -166,7 +165,6 @@ Partial Class FormInputTimbangan
         'PanelTombol
         '
         Me.PanelTombol.BackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(39, Byte), Integer), CType(CType(73, Byte), Integer))
-        Me.PanelTombol.Controls.Add(Me.chkSimulasi)
         Me.PanelTombol.Controls.Add(Me.btnTutup)
         Me.PanelTombol.Controls.Add(Me.btnBatal)
         Me.PanelTombol.Controls.Add(Me.btnCetak)
@@ -177,17 +175,7 @@ Partial Class FormInputTimbangan
         Me.PanelTombol.Size = New System.Drawing.Size(140, 890)
         Me.PanelTombol.TabIndex = 1
         '
-        'chkSimulasi
         '
-        Me.chkSimulasi.AutoSize = True
-        Me.chkSimulasi.ForeColor = System.Drawing.Color.White
-        Me.chkSimulasi.Location = New System.Drawing.Point(12, 420)
-        Me.chkSimulasi.Name = "chkSimulasi"
-        Me.chkSimulasi.Size = New System.Drawing.Size(118, 20)
-        Me.chkSimulasi.TabIndex = 4
-        Me.chkSimulasi.Text = "Mode Simulasi"
-        Me.chkSimulasi.UseVisualStyleBackColor = True
-        Me.chkSimulasi.Visible = False
         '
         'btnTutup
         '
@@ -1243,6 +1231,5 @@ Partial Class FormInputTimbangan
     Friend WithEvents ToolTip1 As System.Windows.Forms.ToolTip
     Friend WithEvents TimerRealtime As System.Windows.Forms.Timer
     Friend WithEvents ContextMenuStrip1 As System.Windows.Forms.ContextMenuStrip
-    Friend WithEvents chkSimulasi As CheckBox
     Friend WithEvents lblNoDO As Label
 End Class

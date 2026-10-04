@@ -5,6 +5,7 @@
 ' TERINTEGRASI DENGAN PrintHelper
 ' =============================================
 Imports System.Data.SqlClient
+Imports System.Globalization
 
 Public Class FormInputTimbangan
     ' Variabel untuk menyimpan state
@@ -651,50 +652,12 @@ Public Class FormInputTimbangan
     ' TOMBOL: AMBIL BERAT (DENGAN VALIDASI)
     ' =============================================
     Private Sub btnAmbilBerat_Click(sender As Object, e As EventArgs) Handles btnAmbilBerat.Click
-        ' === MODE SIMULASI ===
-        If chkSimulasi.Checked Then
-            ' Generate berat random untuk testing (10000 - 30000 kg)
-            Dim rnd As New Random()
-            Dim beratSimulasi As Integer = rnd.Next(10000, 30001)
-
-            ' Tentukan ini timbang pertama atau kedua
-            If _currentTimbangID = 0 Then
-                ' Timbang PERTAMA - set ke lblBeratMasuk
-                lblBeratMasuk.Text = beratSimulasi.ToString("N0")
-                MessageBox.Show("SIMULASI Timbang 1: " & beratSimulasi.ToString("N0") & " Kg",
-                           "Mode Simulasi", MessageBoxButtons.OK, MessageBoxIcon.Information)
-            Else
-                ' Timbang KEDUA - set ke lblBeratKeluar
-                lblBeratKeluar.Text = beratSimulasi.ToString("N0")
-                MessageBox.Show("SIMULASI Timbang 2: " & beratSimulasi.ToString("N0") & " Kg",
-                           "Mode Simulasi", MessageBoxButtons.OK, MessageBoxIcon.Information)
-            End If
-
-            Return
-        End If
-
         Try
             Me.Cursor = Cursors.WaitCursor
             btnAmbilBerat.Enabled = False
             Application.DoEvents()
 
             Dim berat As Decimal = 0
-
-            ' === MODE SIMULASI ===
-            If chkSimulasi.Checked Then
-                ' Generate berat random untuk testing (10000 - 30000 kg)
-                Dim rnd As New Random()
-                Dim beratSimulasi As Integer = rnd.Next(10000, 30001)
-
-                ' Set ke textbox berat (sesuaikan nama textbox Anda)
-                lblBeratRealtime.Text = beratSimulasi.ToString()
-                ' Atau jika pakai label:
-                ' lblBerat.Text = beratSimulasi.ToString()
-
-                MessageBox.Show("SIMULASI: Berat = " & beratSimulasi.ToString("N0") & " Kg",
-                       "Mode Simulasi", MessageBoxButtons.OK, MessageBoxIcon.Information)
-                Return
-            End If
 
             ' 1. Coba ambil dari variabel realtime dulu
             berat = _beratDariIndikator
@@ -817,16 +780,74 @@ Public Class FormInputTimbangan
     End Sub
 
     ' =============================================
+    ' VALIDASI INPUT POTONGAN
+    ' Persen: 0-100 | Kilogram: >= 0
+    ' =============================================
+    Private Function TryGetPotonganValues(ByRef potonganPersen As Decimal,
+                                          ByRef potonganKg As Decimal,
+                                          Optional showMessage As Boolean = True) As Boolean
+        potonganPersen = 0D
+        potonganKg = 0D
+
+        If Not Decimal.TryParse(txtPotonganPersen.Text.Trim(),
+                                NumberStyles.Number,
+                                CultureInfo.CurrentCulture,
+                                potonganPersen) Then
+            If showMessage Then
+                MessageBox.Show("Persentase potongan harus berupa angka yang valid.", "Validasi Potongan",
+                                MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                txtPotonganPersen.Focus()
+                txtPotonganPersen.SelectAll()
+            End If
+            Return False
+        End If
+
+        If potonganPersen < 0D OrElse potonganPersen > 100D Then
+            If showMessage Then
+                MessageBox.Show("Persentase potongan harus berada di antara 0 dan 100.", "Validasi Potongan",
+                                MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                txtPotonganPersen.Focus()
+                txtPotonganPersen.SelectAll()
+            End If
+            Return False
+        End If
+
+        If Not Decimal.TryParse(txtPotonganKg.Text.Trim(),
+                                NumberStyles.Number,
+                                CultureInfo.CurrentCulture,
+                                potonganKg) Then
+            If showMessage Then
+                MessageBox.Show("Potongan kilogram harus berupa angka yang valid.", "Validasi Potongan",
+                                MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                txtPotonganKg.Focus()
+                txtPotonganKg.SelectAll()
+            End If
+            Return False
+        End If
+
+        If potonganKg < 0D Then
+            If showMessage Then
+                MessageBox.Show("Potongan kilogram tidak boleh bernilai negatif.", "Validasi Potongan",
+                                MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                txtPotonganKg.Focus()
+                txtPotonganKg.SelectAll()
+            End If
+            Return False
+        End If
+
+        Return True
+    End Function
+
+    ' =============================================
     ' HITUNG NETTO DAN BERAT BERSIH
     ' =============================================
     Private Sub HitungNetto(netto As Decimal)
         Try
-            Dim potonganPersen As Decimal = 0
-            Dim potonganKg As Decimal = 0
-            Decimal.TryParse(txtPotonganPersen.Text, potonganPersen)
-            Decimal.TryParse(txtPotonganKg.Text, potonganKg)
+            Dim potonganPersen As Decimal = 0D
+            Dim potonganKg As Decimal = 0D
+            If Not TryGetPotonganValues(potonganPersen, potonganKg, False) Then Return
 
-            Dim totalPotongan As Decimal = Math.Round((netto * potonganPersen / 100) + potonganKg, 0)
+            Dim totalPotongan As Decimal = Math.Round((netto * potonganPersen / 100D) + potonganKg, 0)
             Dim beratBersih As Decimal = netto - totalPotongan
 
             lblTotalPotongan.Text = totalPotongan.ToString("N0") & " KG"
@@ -931,6 +952,10 @@ Public Class FormInputTimbangan
                 Return
             End If
 
+            Dim potonganPersen As Decimal = 0D
+            Dim potonganKg As Decimal = 0D
+            If Not TryGetPotonganValues(potonganPersen, potonganKg, True) Then Return
+
             ' =============================================
             ' VALIDASI BERAT TIDAK BOLEH 0
             ' =============================================
@@ -982,11 +1007,7 @@ Public Class FormInputTimbangan
                 Dim netto As Decimal = bruto - tara
 
                 ' Hitung potongan
-                Dim potonganPersen As Decimal = 0
-                Dim potonganKg As Decimal = 0
-                Decimal.TryParse(txtPotonganPersen.Text, potonganPersen)
-                Decimal.TryParse(txtPotonganKg.Text, potonganKg)
-                Dim totalPotongan As Decimal = Math.Round((netto * potonganPersen / 100) + potonganKg, 0)
+                Dim totalPotongan As Decimal = Math.Round((netto * potonganPersen / 100D) + potonganKg, 0)
                 Dim beratBersih As Decimal = netto - totalPotongan
 
                 ' Konfirmasi
@@ -1004,7 +1025,7 @@ Public Class FormInputTimbangan
                     Return
                 End If
 
-                SimpanTimbanganKedua(bruto, tara, netto, totalPotongan, beratBersih)
+                SimpanTimbanganKedua(bruto, tara, netto, totalPotongan, beratBersih, potonganPersen, potonganKg)
             End If
 
         Catch ex As Exception
@@ -1113,13 +1134,14 @@ Public Class FormInputTimbangan
     ' =============================================
     ' SIMPAN TIMBANGAN KEDUA (SELESAI)
     ' =============================================
-    Private Sub SimpanTimbanganKedua(bruto As Decimal, tara As Decimal, netto As Decimal, totalPotongan As Decimal, beratBersih As Decimal)
+    Private Sub SimpanTimbanganKedua(bruto As Decimal,
+                                      tara As Decimal,
+                                      netto As Decimal,
+                                      totalPotongan As Decimal,
+                                      beratBersih As Decimal,
+                                      potonganPersen As Decimal,
+                                      potonganKg As Decimal)
         Try
-            Dim potonganPersen As Decimal = 0
-            Dim potonganKg As Decimal = 0
-            Decimal.TryParse(txtPotonganPersen.Text, potonganPersen)
-            Decimal.TryParse(txtPotonganKg.Text, potonganKg)
-
             ' Ambil data FFA jika ada
             Dim ffa As Decimal = 0
             Dim moisture As Decimal = 0
@@ -1610,16 +1632,6 @@ Public Class FormInputTimbangan
 
         End If
 
-        ' Shortcut rahasia: Ctrl+Shift+S
-        If e.Control AndAlso e.Shift AndAlso e.KeyCode = Keys.T Then
-            chkSimulasi.Visible = Not chkSimulasi.Visible
-            If chkSimulasi.Visible Then
-                MessageBox.Show("Mode Simulasi: AKTIF" & vbCrLf &
-                           "Centang checkbox untuk simulasi berat.",
-                           "Developer Mode", MessageBoxButtons.OK, MessageBoxIcon.Information)
-            End If
-            e.Handled = True
-        End If
         ' Shortcut: Ctrl+Shift+D = DEBUG
         If e.Control AndAlso e.Shift AndAlso e.KeyCode = Keys.D Then
             e.Handled = True

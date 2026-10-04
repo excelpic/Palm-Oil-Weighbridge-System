@@ -149,7 +149,11 @@ Public Class FormLogin
             End If
 
         Catch ex As Exception
-            Debug.WriteLine("CheckAndSetupDatabase error: " & ex.Message)
+            Debug.WriteLine("CheckAndSetupDatabase error: " & ex.ToString())
+            _initialSetupRequired = False
+            btnLogin.Enabled = False
+            lblStatus.Text = "⚠ DATABASE CHECK FAILED"
+            lblStatus.ForeColor = Color.Crimson
         End Try
     End Sub
 
@@ -237,8 +241,11 @@ Public Class FormLogin
         End If
 
         Try
+            ' Create the first administrator atomically. The table lock prevents two
+            ' concurrent first-run sessions from both observing an empty Users table.
             Dim query As String = "INSERT INTO Users (Username, PasswordHash, NamaLengkap, Role, IsActive, AllowedTransType) " &
-                                  "VALUES (@Username, @Password, @NamaLengkap, 'Programmer', 1, 'SEMUA')"
+                                  "SELECT @Username, @Password, @NamaLengkap, 'Direktur', 1, 'SEMUA' " &
+                                  "WHERE NOT EXISTS (SELECT 1 FROM Users WITH (TABLOCKX, HOLDLOCK))"
 
             Dim params As SqlParameter() = {
                 New SqlParameter("@Username", username),
@@ -248,9 +255,9 @@ Public Class FormLogin
 
             Dim rowsAffected As Integer = DatabaseHelper.ExecuteNonQuery(query, params)
             If rowsAffected <= 0 Then
-                Debug.WriteLine("CreateInitialAdminAccount: no rows were inserted.")
-                MessageBox.Show("Unable to create the administrator account. Please verify the database configuration and try again.",
-                                "Account Creation Failed", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                Debug.WriteLine("CreateInitialAdminAccount: Users table already contains an account.")
+                MessageBox.Show("An administrator account already exists. Please sign in with the existing account.",
+                                "Administrator Already Exists", MessageBoxButtons.OK, MessageBoxIcon.Information)
                 Return False
             End If
 
