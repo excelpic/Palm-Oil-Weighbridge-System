@@ -98,8 +98,8 @@ Public Class FormDashboard
                     btnDaftarTimbangan.Visible = True   ' 2. Daftar (Nyala)
                     btnLaporan.Visible = True           ' 3. Laporan (Nyala)
                     btnManajemenUser.Visible = True     ' 4. ManajemenUser (Nyala)
-                    btnSettings.Visible = False         ' 5. Setting (Mati)
-                    btnMasterData.Visible = False       ' 6. Master (Mati)
+                    btnSettings.Visible = True          ' 5. Setting (Nyala)
+                    btnMasterData.Visible = True        ' 6. Master (Nyala)
                     btnAuditLog.Visible = True          ' 7. Audit (Nyala)
 
                 Case "manager"
