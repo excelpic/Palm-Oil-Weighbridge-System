@@ -1027,6 +1027,19 @@ Public Class FormInputTimbangan
 
                 ' Hitung potongan
                 Dim totalPotongan As Decimal = Math.Round((netto * potonganPersen / 100D) + potonganKg, 0)
+
+                If potonganKg > netto Then
+                    MessageBox.Show("Potongan kilogram tidak boleh melebihi berat netto.", "Validasi Potongan",
+                                    MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                    Return
+                End If
+
+                If totalPotongan > netto Then
+                    MessageBox.Show("Total potongan tidak boleh melebihi berat netto.", "Validasi Potongan",
+                                    MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                    Return
+                End If
+
                 Dim beratBersih As Decimal = netto - totalPotongan
 
                 ' Konfirmasi
