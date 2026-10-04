@@ -4,19 +4,11 @@ This repository contains and/or references third-party software. The project aut
 
 ## EPPlus 8.4.2
 
-EPPlus 8 is distributed under a dual licensing model. Qualifying noncommercial use is covered by the Polyform Noncommercial license; commercial use requires the applicable commercial license. The portfolio code explicitly configures the noncommercial personal context for its Excel export workflow.
+EPPlus 8 is distributed under a dual licensing model. Qualifying noncommercial use is covered by the Polyform Noncommercial license; commercial use requires the applicable commercial license. The portfolio code currently configures the noncommercial personal context for its Excel export workflow.
 
 Official licensing information:
 - https://www.epplussoftware.com/en/LicenseOverview/
 - https://epplussoftware.com/docs/8.0/api/index.html
-
-## iTextSharp 5.5.13.4
-
-iTextSharp is distributed under AGPL terms with a commercial licensing option. The package is an older/deprecated iTextSharp release, retained here because the existing application uses it for PDF-related functionality.
-
-References:
-- https://www.nuget.org/packages/iTextSharp/5.5.13.4
-- https://github.com/itext/itextsharp
 
 ## BouncyCastle.Cryptography 2.4.0
 
