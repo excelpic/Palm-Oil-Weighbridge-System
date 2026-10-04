@@ -2007,7 +2007,6 @@ Public Class FormAuditLog
     ' HAPUS LOG LAMA
     ' ============================================= 
     Private Sub btnHapusLogLama_Click(sender As Object, e As EventArgs) Handles btnHapusLogLama.Click
-        ' Audit logs are retained as an accountability record; destructive deletion is disabled.
         MessageBox.Show(
             "Penghapusan Audit Log dinonaktifkan untuk menjaga integritas riwayat aktivitas.",
             "Audit Log",
