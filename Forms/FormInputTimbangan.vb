@@ -546,10 +546,7 @@ Public Class FormInputTimbangan
             txtNoKontrak.Text = GetSetting("NO_KONTRAK", "")
         End If
 
-        ' === SET DEFAULT TRANS TYPE ===
-        If cmbTransType IsNot Nothing AndAlso cmbTransType.Items.Count > 0 Then
-            cmbTransType.SelectedIndex = 0 ' Default: JUAL
-        End If
+        ApplyAllowedTransTypeSelection()
 
         ' Reset label berat
         lblBeratMasuk.Text = "0 KG"
@@ -572,6 +569,19 @@ Public Class FormInputTimbangan
 
         ' Field Keterangan disabled sampai checkbox dicentang
         txtKeterangan.Enabled = False
+    End Sub
+
+    Private Sub ApplyAllowedTransTypeSelection()
+        If cmbTransType Is Nothing OrElse cmbTransType.Items.Count = 0 Then Return
+
+        Dim allowedTransType As String = If(UserSession.AllowedTransType, "SEMUA").Trim().ToUpperInvariant()
+        If allowedTransType = "JUAL" OrElse allowedTransType = "BELI" Then
+            cmbTransType.SelectedItem = allowedTransType
+            cmbTransType.Enabled = False
+        Else
+            cmbTransType.SelectedIndex = 0
+            cmbTransType.Enabled = True
+        End If
     End Sub
 
     ' =============================================
@@ -609,7 +619,9 @@ Public Class FormInputTimbangan
         If txtNoSIM IsNot Nothing Then txtNoSIM.Clear()
         If txtAlamat IsNot Nothing Then txtAlamat.Clear()
         If txtSuhuMinyak IsNot Nothing Then txtSuhuMinyak.Clear()
-        If cmbTransType IsNot Nothing Then cmbTransType.SelectedIndex = 0 ' Default JUAL
+        If cmbTransType IsNot Nothing Then
+            cmbTransType.SelectedIndex = 0
+        End If
     End Sub
 
 
