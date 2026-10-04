@@ -651,50 +651,12 @@ Public Class FormInputTimbangan
     ' TOMBOL: AMBIL BERAT (DENGAN VALIDASI)
     ' =============================================
     Private Sub btnAmbilBerat_Click(sender As Object, e As EventArgs) Handles btnAmbilBerat.Click
-        ' === MODE SIMULASI ===
-        If chkSimulasi.Checked Then
-            ' Generate berat random untuk testing (10000 - 30000 kg)
-            Dim rnd As New Random()
-            Dim beratSimulasi As Integer = rnd.Next(10000, 30001)
-
-            ' Tentukan ini timbang pertama atau kedua
-            If _currentTimbangID = 0 Then
-                ' Timbang PERTAMA - set ke lblBeratMasuk
-                lblBeratMasuk.Text = beratSimulasi.ToString("N0")
-                MessageBox.Show("SIMULASI Timbang 1: " & beratSimulasi.ToString("N0") & " Kg",
-                           "Mode Simulasi", MessageBoxButtons.OK, MessageBoxIcon.Information)
-            Else
-                ' Timbang KEDUA - set ke lblBeratKeluar
-                lblBeratKeluar.Text = beratSimulasi.ToString("N0")
-                MessageBox.Show("SIMULASI Timbang 2: " & beratSimulasi.ToString("N0") & " Kg",
-                           "Mode Simulasi", MessageBoxButtons.OK, MessageBoxIcon.Information)
-            End If
-
-            Return
-        End If
-
         Try
             Me.Cursor = Cursors.WaitCursor
             btnAmbilBerat.Enabled = False
             Application.DoEvents()
 
             Dim berat As Decimal = 0
-
-            ' === MODE SIMULASI ===
-            If chkSimulasi.Checked Then
-                ' Generate berat random untuk testing (10000 - 30000 kg)
-                Dim rnd As New Random()
-                Dim beratSimulasi As Integer = rnd.Next(10000, 30001)
-
-                ' Set ke textbox berat (sesuaikan nama textbox Anda)
-                lblBeratRealtime.Text = beratSimulasi.ToString()
-                ' Atau jika pakai label:
-                ' lblBerat.Text = beratSimulasi.ToString()
-
-                MessageBox.Show("SIMULASI: Berat = " & beratSimulasi.ToString("N0") & " Kg",
-                       "Mode Simulasi", MessageBoxButtons.OK, MessageBoxIcon.Information)
-                Return
-            End If
 
             ' 1. Coba ambil dari variabel realtime dulu
             berat = _beratDariIndikator
@@ -1610,16 +1572,6 @@ Public Class FormInputTimbangan
 
         End If
 
-        ' Shortcut rahasia: Ctrl+Shift+S
-        If e.Control AndAlso e.Shift AndAlso e.KeyCode = Keys.T Then
-            chkSimulasi.Visible = Not chkSimulasi.Visible
-            If chkSimulasi.Visible Then
-                MessageBox.Show("Mode Simulasi: AKTIF" & vbCrLf &
-                           "Centang checkbox untuk simulasi berat.",
-                           "Developer Mode", MessageBoxButtons.OK, MessageBoxIcon.Information)
-            End If
-            e.Handled = True
-        End If
         ' Shortcut: Ctrl+Shift+D = DEBUG
         If e.Control AndAlso e.Shift AndAlso e.KeyCode = Keys.D Then
             e.Handled = True
