@@ -531,7 +531,7 @@ Public Class FormManajemenUser
 
                                         Catch ex As Exception
                                             Debug.WriteLine("[FormManajemenUser] Error: " & ex.ToString())
-                                            MessageBox.Show("Operasi user gagal.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                    MessageBox.Show("Operasi user gagal.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                                         End Try
                                     End Sub
 
