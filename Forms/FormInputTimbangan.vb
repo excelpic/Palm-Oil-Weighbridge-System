@@ -280,7 +280,15 @@ Public Class FormInputTimbangan
                 cmbTransType.Items.Clear()
                 cmbTransType.Items.Add("JUAL")
                 cmbTransType.Items.Add("BELI")
-                cmbTransType.SelectedIndex = 0 ' Default: JUAL
+
+                Dim allowedTransType As String = If(UserSession.AllowedTransType, "SEMUA").Trim().ToUpperInvariant()
+                If allowedTransType = "JUAL" OrElse allowedTransType = "BELI" Then
+                    cmbTransType.SelectedItem = allowedTransType
+                    cmbTransType.Enabled = False
+                Else
+                    cmbTransType.SelectedIndex = 0
+                    cmbTransType.Enabled = True
+                End If
             End If
 
         Catch ex As Exception
@@ -977,6 +985,17 @@ Public Class FormInputTimbangan
             If _currentTimbangID = 0 Then
                 If Not ValidasiInputDasar() Then Return
 
+                Dim transType As String = If(cmbTransType IsNot Nothing AndAlso cmbTransType.SelectedItem IsNot Nothing,
+                                             cmbTransType.SelectedItem.ToString().Trim().ToUpperInvariant(), "")
+                If transType <> "JUAL" AndAlso transType <> "BELI" Then
+                    MessageBox.Show("Jenis transaksi tidak valid.", "Validasi", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                    Return
+                End If
+                If Not UserSession.CanViewTransType(transType) Then
+                    UserSession.Authorize(False, "membuat transaksi " & transType)
+                    Return
+                End If
+
                 ' Konfirmasi
                 If MessageBox.Show($"Simpan data timbangan pertama?" & vbCrLf & vbCrLf &
                     $"No. Polisi: {txtNoPolisi.Text}" & vbCrLf &
@@ -1008,6 +1027,19 @@ Public Class FormInputTimbangan
 
                 ' Hitung potongan
                 Dim totalPotongan As Decimal = Math.Round((netto * potonganPersen / 100D) + potonganKg, 0)
+
+                If potonganKg > netto Then
+                    MessageBox.Show("Potongan kilogram tidak boleh melebihi berat netto.", "Validasi Potongan",
+                                    MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                    Return
+                End If
+
+                If totalPotongan > netto Then
+                    MessageBox.Show("Total potongan tidak boleh melebihi berat netto.", "Validasi Potongan",
+                                    MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                    Return
+                End If
+
                 Dim beratBersih As Decimal = netto - totalPotongan
 
                 ' Konfirmasi
@@ -1073,7 +1105,15 @@ Public Class FormInputTimbangan
             Dim noSIM As String = If(txtNoSIM IsNot Nothing, txtNoSIM.Text.Trim(), "")
             Dim alamat As String = If(txtAlamat IsNot Nothing, txtAlamat.Text.Trim(), "")
             Dim transType As String = If(cmbTransType IsNot Nothing AndAlso cmbTransType.SelectedItem IsNot Nothing,
-                                 cmbTransType.SelectedItem.ToString(), "JUAL")
+                                 cmbTransType.SelectedItem.ToString().Trim().ToUpperInvariant(), "")
+            If transType <> "JUAL" AndAlso transType <> "BELI" Then
+                MessageBox.Show("Jenis transaksi tidak valid.", "Validasi", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                Return
+            End If
+            If Not UserSession.CanViewTransType(transType) Then
+                UserSession.Authorize(False, "membuat transaksi " & transType)
+                Return
+            End If
             Dim segelAtas As String = If(txtSegelAtas IsNot Nothing, txtSegelAtas.Text.Trim(), "")
             Dim segelBawah As String = If(txtSegelBawah IsNot Nothing, txtSegelBawah.Text.Trim(), "")
 

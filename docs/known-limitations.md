@@ -1,6 +1,6 @@
 # Known Limitations
 
-This portfolio repository is a cleaned and security-hardened snapshot, not a full rewrite of the application architecture.
+This portfolio repository is a cleaned snapshot with baseline security improvements, not a full rewrite of the application architecture.
 
 ## Runtime Validation
 
@@ -20,4 +20,4 @@ DPAPI protection uses the current Windows user scope. This improves confidential
 
 ## Third-Party Components
 
-Some dependencies are retained because the existing application relies on them for reporting, PDF/spreadsheet export, or SQL Server native type support. Their licensing and redistribution terms remain independent from this repository's no-license status.
+Some dependencies are retained because the existing application relies on them for reporting, spreadsheet export, or SQL Server native type support. Their licensing and redistribution terms remain independent from this repository's no-license status.

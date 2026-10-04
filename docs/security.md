@@ -2,7 +2,7 @@
 
 ## Implemented Controls
 - Hardcoded SQL credentials and default login credentials were removed from the public source.
-- New passwords use PBKDF2-HMAC-SHA256 with per-password random salts.
+- New and updated passwords use PBKDF2-HMAC-SHA256 with per-password random salts.
 - Legacy unsalted SHA-256 credentials can be upgraded after successful authentication.
 - SQL Authentication credential payloads are protected locally with Windows DPAPI.
 - Application-supplied database values use SQL parameters where applicable.

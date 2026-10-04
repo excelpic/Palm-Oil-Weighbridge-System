@@ -385,6 +385,33 @@ Public Class FormEditTimbangan
             Dim potonganKg As Decimal = 0D
             If Not TryGetPotonganValues(potonganPersen, potonganKg, True) Then Return
 
+            Dim beratBruto As Decimal = 0D
+            Dim beratTara As Decimal = 0D
+            If Not Decimal.TryParse(txtBeratBruto.Text.Replace(".", "").Replace(",", ""),
+                                    beratBruto) OrElse
+               Not Decimal.TryParse(txtBeratTara.Text.Replace(".", "").Replace(",", ""),
+                                    beratTara) Then
+                MessageBox.Show("Berat bruto dan tara harus berupa angka yang valid.", "Validasi",
+                                MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                Return
+            End If
+
+            Dim netto As Decimal = Math.Abs(beratBruto - beratTara)
+            If potonganKg > netto Then
+                MessageBox.Show("Potongan kilogram tidak boleh melebihi berat netto.", "Validasi Potongan",
+                                MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                txtPotonganKg.Focus()
+                txtPotonganKg.SelectAll()
+                Return
+            End If
+
+            Dim totalPotongan As Decimal = Math.Round((netto * potonganPersen / 100D) + potonganKg, 0)
+            If totalPotongan > netto Then
+                MessageBox.Show("Total potongan tidak boleh melebihi berat netto.", "Validasi Potongan",
+                                MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                Return
+            End If
+
             ' Deteksi perubahan
             Dim perubahan As String = DeteksiPerubahan()
             If String.IsNullOrEmpty(perubahan) Then

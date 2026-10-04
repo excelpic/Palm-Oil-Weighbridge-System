@@ -30,6 +30,8 @@ Public Class FormAuditLog
             ' Load data audit log
             CurrentPage = 1
             LoadAuditLogData()
+            btnHapusLogLama.Visible = False
+            btnHapusLogLama.Enabled = False
 
             ' Audit log untuk form ini
             Try
@@ -2005,36 +2007,11 @@ Public Class FormAuditLog
     ' HAPUS LOG LAMA
     ' ============================================= 
     Private Sub btnHapusLogLama_Click(sender As Object, e As EventArgs) Handles btnHapusLogLama.Click
-        If MessageBox.Show("⚠️ PERINGATAN!" & vbCrLf & vbCrLf &
-                          "Apakah Anda yakin ingin menghapus log lebih dari 90 hari?" & vbCrLf &
-                          "Tindakan ini tidak dapat dibatalkan!",
-                          "Konfirmasi Hapus Log Lama",
-                          MessageBoxButtons.YesNo, MessageBoxIcon.Warning) = DialogResult.No Then
-            Return
-        End If
-
-        Try
-            Dim cutoffDate As DateTime = DateTime.Today.AddDays(-90)
-            Dim deleteQuery As String = "DELETE FROM AuditLog WHERE CreatedAt < @CutoffDate"
-            Dim rowsAffected As Integer = DatabaseHelper.ExecuteNonQuery(deleteQuery,
-                {New SqlParameter("@CutoffDate", cutoffDate)})
-
-            MessageBox.Show($"✅ {rowsAffected:N0} log lama berhasil dihapus!", "Hapus Log Lama",
-                           MessageBoxButtons.OK, MessageBoxIcon.Information)
-
-            ' Audit log
-            DatabaseHelper.InsertAuditLog(UserSession.UserID, "Hapus Log Lama", Nothing,
-                "AuditLog", Nothing, Nothing, Nothing,
-                $"Hapus {rowsAffected} log lama (> 90 hari)")
-
-            LoadStatistikCards()
-            LoadAuditLogData()
-
-        Catch ex As Exception
-            Debug.WriteLine("[FormAuditLog.DeleteOldLogs] Error: " & ex.ToString())
-            MessageBox.Show("Gagal menghapus log lama.", "Error",
-                          MessageBoxButtons.OK, MessageBoxIcon.Error)
-        End Try
+        MessageBox.Show(
+            "Penghapusan Audit Log dinonaktifkan untuk menjaga integritas riwayat aktivitas.",
+            "Audit Log",
+            MessageBoxButtons.OK,
+            MessageBoxIcon.Information)
     End Sub
 
     ' ============================================= 
